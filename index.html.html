@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Trainer Pro - Plataforma de Treinamento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --bg-primary: #f0f4f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --primary: #F97316;
+            --primary-dark: #ea580c;
+            --secondary: #3B82F6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8B5CF6;
+        }
+
+        body.dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+        }
+
+        body {
+            background: var(--bg-primary);
+            transition: all 0.3s;
+        }
+
+        /* Login */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 48px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border-radius: 60px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            background: linear-gradient(135deg, #F97316, #8B5CF6);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+        }
+
+        /* App Container */
+        .app-container {
+            min-height: 100vh;
+            display: none;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            padding: 5px 12px;
+            border-radius: 60px;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn {
+            background: var(--border-color);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.3s;
+        }
+
+        .screen.active-screen {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--purple));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            background: var(--border-color);
+            border-radius: 20px;
+            height: 8px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.5s;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            margin-top: 10px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            border-left: 4px solid var(--primary);
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Módulo - Layout igual à imagem */
+        .modulo-container {
+            background: var(--bg-primary);
+            border-radius: 32px;
+            overflow: hidden;
+        }
+
+        .modulo-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 30px 40px;
+            color: white;
+        }
+
+        .modulo-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            margin-bottom: 15px;
+        }
+
+        .modulo-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .modulo-header p {
+            color: #94a3b8;
+        }
+
+        .modulo-progresso {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .modulo-progresso .progress-bar {
+            flex: 1;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .modulo-progresso .progress-fill {
+            background: linear-gradient(90deg, #F97316, #8B5CF6);
+        }
+
+        .modulo-main {
+            display: flex;
+            gap: 30px;
+            padding: 30px 40px;
+        }
+
+        .modulo-sidebar {
+            flex: 1.2;
+        }
+
+        .modulo-content {
+            flex: 2;
+        }
+
+        .aulas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .aula-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border-color);
+        }
+
+        .aula-item:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .aula-item.completa {
+            background: #dcfce7;
+            border-color: #10b981;
+        }
+
+        body.dark .aula-item.completa {
+            background: #065f46;
+        }
+
+        .aula-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .aula-item.completa .aula-icon {
+            background: #10b981;
+            color: white;
+        }
+
+        .aula-info {
+            flex: 1;
+        }
+
+        .aula-titulo {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .aula-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Cards de Exercício e Simulação */
+        .exercicio-card, .pratica-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .exercicio-card:hover, .pratica-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .exercicio-card h3, .pratica-card h3 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-exercicio {
+            background: linear-gradient(135deg, #8B5CF6, #6d28d9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .btn-simulacao {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .btn-exercicio:hover, .btn-simulacao:hover {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+        }
+
+        .btn-pdf {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            cursor: pointer;
+        }
+
+        .btn-voltar {
+            background: var(--border-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Video Player dentro do Modal */
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            background: #000;
+        }
+
+        .video-player iframe {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+        }
+
+        /* Quiz */
+        .quiz-question {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .quiz-option {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 60px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .quiz-option.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .quiz-option.wrong {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 16px;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback.correct {
+            background: #10b98120;
+            color: #10b981;
+            border-left: 4px solid #10b981;
+        }
+
+        .feedback.wrong {
+            background: #ef444420;
+            color: #ef4444;
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 32px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 20px;
+            border-radius: 32px 32px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .scrollable {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .modulo-main {
+                flex-direction: column;
+                padding: 20px;
+            }
+            .top-bar {
+                flex-direction: column;
+            }
+            .screen {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Tela de Login -->
+<div id="loginScreen" class="login-container">
+    <div class="login-card">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-chalkboard-user" style="font-size: 3rem; color: #F97316;"></i>
+            <h1 style="font-size: 1.8rem; margin-top: 10px;">Market Trainer Pro</h1>
+            <p style="color: #64748b; margin-top: 10px;">Treinamento interativo para supermercados</p>
+        </div>
+        <input type="text" id="loginNome" placeholder="Nome completo" value="Ana Silva">
+        <input type="text" id="loginCpf" placeholder="CPF" value="12345678900">
+        <input type="password" id="loginSenha" placeholder="Senha" value="123">
+        <button class="btn-primary" id="btnLogin">🚀 Entrar no Treinamento</button>
+        <div style="margin-top: 20px; text-align: center; font-size: 0.75rem;">Gestor: gestor / 00000000000 / 123</div>
+    </div>
+</div>
+
+<!-- App Principal -->
+<div class="app-container" id="appContainer">
+    <div class="top-bar">
+        <div class="logo">
+            <i class="fas fa-chalkboard-user" style="font-size: 1.8rem; color: #F97316;"></i>
+            <h1>Market Trainer Pro</h1>
+            <span class="level-badge" id="levelBadge">🥉 Bronze</span>
+        </div>
+        <div class="nav-buttons" id="navButtons"></div>
+        <div style="display: flex; gap: 8px;">
+            <button class="action-btn" id="themeToggle"><i class="fas fa-palette"></i> Tema</button>
+            <button class="action-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="screensContainer"></div>
+</div>
+
+<script>
+    // ==============================================================
+    // 24 SETORES (MÓDULOS) COM VÍDEO AULAS
+    // ==============================================================
+    const todosModulos = {
+        acougue: { 
+            nome: "Açougue", icone: "🥩", carga: 5, cor: "#ef4444",
+            aulas: [
+                { titulo: "Cortes e Conservação", desc: "Aprenda os principais cortes e como conservar", videoId: "<iframe width="1521" height="526" src="https://www.youtube.com/embed/pnhLLDc3XDk" title="Repositores - confira como funciona nosso rígido controle de qualidade neste setor" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>", conteudo: "📚 Conteúdo da aula sobre cortes de carne:\n\n• Corte filé mignon: retirado do contra-filé\n• Corte picanha: famosa pelo sabor\n• Conservação: manter entre 0°C e 4°C" },
+                { titulo: "Higiene e Segurança", desc: "Boas práticas no manuseio de carnes", videoId: "https://www.youtube.com/embed/2FpYp8XqFZU", conteudo: "🧼 Higienização:\n\n• Lave as mãos a cada 20 minutos\n• Use luvas de malha de aço\n• Troque a faca a cada tipo de corte" },
+                { titulo: "Atendimento ao Cliente", desc: "Como lidar com pedidos especiais", videoId: "https://www.youtube.com/embed/3QHkUwqH1Kg", conteudo: "🎯 Dicas de atendimento:\n\n• Sempre sorria e cumprimente\n• Ofereça cortes personalizados\n• Sugira acompanhamentos" }
+            ],
+            quiz: [
+                { pergunta: "Qual a temperatura ideal para conservar carnes no açougue?", opcoes: ["0°C a 4°C", "-10°C a 0°C", "10°C a 15°C", "20°C a 25°C"], correta: 0, explicacao: "Carnes devem ser mantidas entre 0°C e 4°C para evitar proliferação de bactérias." },
+                { pergunta: "Qual equipamento de proteção é OBRIGATÓRIO no açougue?", opcoes: ["Luva de malha de aço", "Óculos escuros", "Boné", "Protetor auricular"], correta: 0, explicacao: "A luva de malha de aço protege contra cortes durante o manuseio de facas." }
+            ] },
+        padaria: { 
+            nome: "Padaria", icone: "🍞", carga: 4, cor: "#f59e0b",
+            aulas: [
+                { titulo: "Tipos de Pães", desc: "Conheça as variedades de pães", videoId: "https://www.youtube.com/embed/4gFw5pXvZzY", conteudo: "🥖 Tipos de pães:\n\n• Pão francês: tradicional do café da manhã\n• Pão integral: feito com farinha integral\n• Baguete: pão francês alongado\n• Pão doce: com açúcar e leite" },
+                { titulo: "Forno Ideal", desc: "Temperaturas e tempos de forno", videoId: "https://www.youtube.com/embed/5hJqVpXyRZw", conteudo: "🔥 Controle do forno:\n\n• Pão francês: 220°C por 15-20 min\n• Pão integral: 200°C por 25 min\n• Baguete: 230°C por 15 min" },
+                { titulo: "Atendimento", desc: "Como servir com qualidade", videoId: "https://www.youtube.com/embed/6iKrVpYzUaa", conteudo: "👨‍🍳 Atendimento na padaria:\n\n• Use luvas para manusear os pães\n• Pergunte se o cliente quer fatiado\n• Ofereça pães quentinhos do forno" }
+            ],
+            quiz: [
+                { pergunta: "Qual a temperatura ideal para assar pão francês?", opcoes: ["180°C", "220°C", "150°C", "280°C"], correta: 1, explicacao: "A temperatura ideal para assar pão francês é em torno de 220°C." },
+                { pergunta: "O que fazer com pães que saíram queimados do forno?", opcoes: ["Descartar e refazer o lote", "Vender com desconto", "Misturar com pães bons", "Ignorar o problema"], correta: 0, explicacao: "Produtos queimados devem ser descartados para manter a qualidade." }
+            ] },
+        hortifruti: { 
+            nome: "Hortifrúti", icone: "🥬", carga: 4, cor: "#22c55e",
+            aulas: [
+                { titulo: "Seleção de Frutas", desc: "Como escolher frutas maduras", videoId: "https://www.youtube.com/embed/7jLKVpYzVbb", conteudo: "🍎 Como escolher frutas:\n\n• Maçã: casca brilhante e firme\n• Banana: casca amarela com pintas\n• Laranja: casca lisa e pesada" },
+                { titulo: "Conservação", desc: "Armazenamento correto", videoId: "https://www.youtube.com/embed/8kMJVpYzWcc", conteudo: "❄️ Conservação:\n\n• Frutas climatéricas: fora da geladeira\n• Verduras: geladeira em sacos perfurados\n• Mantenha separado frutas de verduras" },
+                { titulo: "Reposição", desc: "Técnicas de reposição", videoId: "https://www.youtube.com/embed/9lNJVpYzXdd", conteudo: "📦 Técnicas de reposição:\n\n• PEPS: Primeiro que Entra, Primeiro que Sai\n• Remova produtos danificados\n• Mantenha a gôndola organizada" }
+            ],
+            quiz: [
+                { pergunta: "Como identificar um abacaxi maduro?", opcoes: ["Casca amarelada e cheiro doce", "Casca totalmente verde", "Folhas secas", "Peso muito leve"], correta: 0, explicacao: "Abacaxi maduro tem casca amarelada e exala cheiro doce." },
+                { pergunta: "O que fazer com alfaces murchas na gôndola?", opcoes: ["Retirar e solicitar reposição", "Borrifar água", "Reduzir o preço", "Ignorar"], correta: 0, explicacao: "Produtos murchos devem ser retirados para manter a qualidade." }
+            ] },
+        caixa: { 
+            nome: "Frente de Caixa", icone: "🧾", carga: 5, cor: "#10b981",
+            aulas: [
+                { titulo: "Atendimento ao Cliente", desc: "Como tratar o cliente", videoId: "https://www.youtube.com/embed/0mKMVpYzYee", conteudo: "😊 Atendimento:\n\n• Cumprimente com sorriso\n• Seja ágil e educado\n• Agradeça pela compra" },
+                { titulo: "Operações do Caixa", desc: "Como operar o sistema", videoId: "https://www.youtube.com/embed/1nLMVpYzZff", conteudo: "💻 Operações:\n\n• Leitura de códigos de barras\n• Tipos de pagamento: dinheiro, cartão, pix\n• Emissão de notas fiscais" },
+                { titulo: "Solução de Problemas", desc: "Como lidar com filas e reclamações", videoId: "https://www.youtube.com/embed/2oNMVpYzAgg", conteudo: "🛠️ Solução de problemas:\n\n• Abra outro caixa se necessário\n• Peça desculpas educadamente\n• Chame o gerente quando necessário" }
+            ],
+            quiz: [
+                { pergunta: "O que fazer ao receber uma nota de dinheiro suspeita?", opcoes: ["Chamar o gerente imediatamente", "Devolver para o cliente", "Guardar no caixa", "Ignorar"], correta: 0, explicacao: "Sempre chame o gerente ao suspeitar de nota falsa." },
+                { pergunta: "Como lidar com um cliente nervoso na fila?", opcoes: ["Pedir desculpas e chamar apoio", "Ignorar", "Responder na mesma altura", "Abrir outro caixa sem avisar"], correta: 0, explicacao: "A melhor abordagem é acolher o cliente e buscar solução." }
+            ] }
+    };
+
+    // Completar com mais 20 setores
+    const setoresExtras = ["peixaria","confeitaria","rotisseria","laticinios","frios","mercearia","bebidas","higiene","perfumaria","bazar","papelaria","brinquedos","petshop","eletronicos","reposicao","deposito","logistica","servicos","fiscal","limpeza"];
+    setoresExtras.forEach((slug, i) => {
+        todosModulos[slug] = { 
+            nome: slug.charAt(0).toUpperCase() + slug.slice(1), 
+            icone: "📦", carga: 2, cor: "#64748b",
+            aulas: [
+                { titulo: "Introdução ao setor", desc: "Conceitos básicos", videoId: "https://www.youtube.com/embed/3pNMVpYzBhh", conteudo: "📖 Conteúdo introdutório sobre o setor..." },
+                { titulo: "Boas Práticas", desc: "Como fazer corretamente", videoId: "https://www.youtube.com/embed/4qNMVpYzCii", conteudo: "✅ Instruções detalhadas sobre boas práticas..." }
+            ],
+            quiz: [
+                { pergunta: "Qual a primeira atitude ao identificar um problema no setor?", opcoes: ["Comunicar o supervisor", "Ignorar", "Resolver sozinho", "Sair do setor"], correta: 0, explicacao: "Sempre comunique seu supervisor sobre problemas identificados." }
+            ] 
+        };
+    });
+
+    // Variáveis Globais
+    let currentUser = null;
+    let isGestor = false;
+    let userData = null;
+    let currentScreen = 'dashboard';
+    let moduloAtivo = null;
+
+    // Funções Auxiliares
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function getNivel(pontos) {
+        if (pontos >= 2000) return { nome: "💎 Diamante", cor: "#00b4d8" };
+        if (pontos >= 1000) return { nome: "💿 Platina", cor: "#e5e5e5" };
+        if (pontos >= 500) return { nome: "🥇 Ouro", cor: "#ffd700" };
+        if (pontos >= 200) return { nome: "🥈 Prata", cor: "#c0c0c0" };
+        return { nome: "🥉 Bronze", cor: "#cd7f32" };
+    }
+
+    function loadUserData(nome, cpf) {
+        const key = `market_${cpf}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            userData = JSON.parse(saved);
+        } else {
+            let progresso = {};
+            for (let slug in todosModulos) {
+                progresso[slug] = { progresso: 0, concluido: false, aulasCompletas: [], exercicioFeito: false, simulacaoFeita: false };
+            }
+            userData = { nome, cpf, pontos: 0, progresso, conquistas: [] };
+            saveUserData();
+        }
+        atualizarLevelBadge();
+    }
+
+    function saveUserData() { localStorage.setItem(`market_${userData.cpf}`, JSON.stringify(userData)); }
+
+    function atualizarLevelBadge() {
+        const nivel = getNivel(userData.pontos);
+        const badge = document.getElementById('levelBadge');
+        if (badge) badge.innerHTML = nivel.nome;
+    }
+
+    function addPontos(qtd, motivo = 'Atividade') {
+        userData.pontos += qtd;
+        saveUserData();
+        showToast(`✨ +${qtd} pontos! Total: ${userData.pontos}`, 'success');
+        atualizarLevelBadge();
+        verificarConquistas();
+        if (qtd > 30) canvasConfetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+    }
+
+    function verificarConquistas() {
+        const novas = [];
+        if (userData.pontos >= 100 && !userData.conquistas.find(c => c.nome === "Iniciante")) novas.push({ nome: "⭐ Iniciante", icone: "fa-star" });
+        if (userData.pontos >= 500 && !userData.conquistas.find(c => c.nome === "Aprendiz")) novas.push({ nome: "🏅 Aprendiz", icone: "fa-medal" });
+        if (userData.pontos >= 1000 && !userData.conquistas.find(c => c.nome === "Expert")) { novas.push({ nome: "🔥 Expert", icone: "fa-fire" }); canvasConfetti({ particleCount: 300, spread: 120 }); }
+        let modulosConcluidos = Object.values(userData.progresso).filter(m => m.concluido).length;
+        if (modulosConcluidos >= 5 && !userData.conquistas.find(c => c.nome === "Estudioso")) novas.push({ nome: "📚 Estudioso", icone: "fa-book" });
+        if (modulosConcluidos >= 12 && !userData.conquistas.find(c => c.nome === "Mestre")) novas.push({ nome: "🎓 Mestre", icone: "fa-graduation-cap" });
+        novas.forEach(c => { userData.conquistas.push(c); showToast(`🏆 Nova conquista: ${c.nome}!`, 'success'); });
+        saveUserData();
+    }
+
+    function calcularProgressoGeral() {
+        let total = 0, count = 0;
+        for (let s in userData.progresso) { 
+            let mod = userData.progresso[s];
+            let aulasProgresso = (mod.aulasCompletas?.length || 0) / (todosModulos[s].aulas.length || 1) * 50;
+            let exercicioProgresso = mod.exercicioFeito ? 25 : 0;
+            let simulacaoProgresso = mod.simulacaoFeita ? 25 : 0;
+            total += aulasProgresso + exercicioProgresso + simulacaoProgresso;
+            count += 100;
+        }
+        return count ? (total / count) * 100 : 0;
+    }
+
+    function listarTodosUsuarios() {
+        let usuarios = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith('market_')) {
+                let data = JSON.parse(localStorage.getItem(key));
+                usuarios.push({ nome: data.nome, pontos: data.pontos });
+            }
+        }
+        return usuarios;
+    }
+
+    // Funções do Módulo com Vídeo Aula
+    window.abrirModulo = function(slug) {
+        const setor = todosModulos[slug];
+        const mod = userData.progresso[slug];
+        moduloAtivo = slug;
+        
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById('modulo-detalhe-screen').classList.add('active-screen');
+        
+        let aulasConcluidas = mod.aulasCompletas?.length || 0;
+        let progressoAulas = (aulasConcluidas / setor.aulas.length) * 50;
+        let progressoExercicio = mod.exercicioFeito ? 25 : 0;
+        let progressoSimulacao = mod.simulacaoFeita ? 25 : 0;
+        let progressoTotal = progressoAulas + progressoExercicio + progressoSimulacao;
+        
+        let aulasHTML = '';
+        setor.aulas.forEach((aula, idx) => {
+            let isCompleta = mod.aulasCompletas?.includes(idx);
+            aulasHTML += `
+                <div class="aula-item ${isCompleta ? 'completa' : ''}" onclick="abrirAula('${slug}', ${idx})">
+                    <div class="aula-icon"><i class="fas ${isCompleta ? 'fa-check-circle' : 'fa-play'}"></i></div>
+                    <div class="aula-info">
+                        <div class="aula-titulo">Aula ${idx+1}: ${aula.titulo}</div>
+                        <div class="aula-desc">${aula.desc}</div>
+                    </div>
+                    ${isCompleta ? '<i class="fas fa-check-circle" style="color:#10b981;"></i>' : '<i class="fas fa-video" style="color:var(--primary);"></i>'}
+                </div>
+            `;
+        });
+        
+        document.getElementById('moduloDetalheContent').innerHTML = `
+            <div class="modulo-container">
+                <div class="modulo-header">
+                    <div class="modulo-badge"><i class="fas fa-graduation-cap"></i> MÓDULO</div>
+                    <h2>${setor.icone} ${setor.nome}</h2>
+                    <p>Domine as principais técnicas e boas práticas do setor de ${setor.nome}</p>
+                    <div class="modulo-progresso">
+                        <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${progressoTotal}%"></div></div>
+                        <span>${Math.floor(progressoTotal)}% concluído</span>
+                    </div>
+                </div>
+                <div class="modulo-main">
+                    <div class="modulo-sidebar">
+                        <div class="aulas-list">${aulasHTML}</div>
+                    </div>
+                    <div class="modulo-content">
+                        <div class="exercicio-card">
+                            <h3><i class="fas fa-dumbbell"></i> Exercício do módulo</h3>
+                            <p>Teste seus conhecimentos sobre ${setor.nome}</p>
+                            <button class="btn-exercicio" onclick="iniciarExercicio('${slug}')">Iniciar exercício (+30 pts)</button>
+                        </div>
+                        <div class="pratica-card">
+                            <h3><i class="fas fa-laptop-code"></i> Simulação prática</h3>
+                            <p>Pratique situações reais do dia a dia</p>
+                            <button class="btn-simulacao" onclick="iniciarSimulacao('${slug}')">Iniciar simulação (+40 pts)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    window.abrirAula = function(slug, aulaIdx) {
+        const setor = todosModulos[slug];
+        const aula = setor.aulas[aulaIdx];
+        const modal = document.getElementById('aula-modal');
+        
+        document.getElementById('modalTitulo').innerHTML = `Aula ${aulaIdx+1}: ${aula.titulo}`;
+        document.getElementById('modalBody').innerHTML = `
+            <div style="line-height:1.6;">
+                <!-- Player de Vídeo -->
+                <div class="video-player">
+                    <iframe 
+                        src="${aula.videoId}?rel=0&modestbranding=1" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                
+                <!-- Conteúdo da Aula -->
+                <div style="white-space: pre-line; margin-top: 20px;">
+                    ${aula.conteudo}
+                </div>
+                
+                <div style="background: var(--bg-primary); padding:20px; border-radius:16px; margin:20px 0;">
+                    <i class="fas fa-lightbulb" style="color:var(--primary);"></i> 
+                    <strong>Dica importante:</strong> Assista ao vídeo completo e depois marque a aula como concluída!
+                </div>
+                
+                <button class="btn-primary" onclick="marcarAulaCompleta('${slug}', ${aulaIdx})" style="width:100%;">
+                    <i class="fas fa-check-circle"></i> Marcar como concluída (+15 pontos)
+                </button>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    }
+
+    window.marcarAulaCompleta = function(slug, aulaIdx) {
+        const setor = todosModulos[slug];
+        let mod = userData.progresso[slug];
+        if (!mod.aulasCompletas) mod.aulasCompletas = [];
+        
+        if (mod.aulasCompletas.includes(aulaIdx)) {
+            showToast("Você já concluiu esta aula!", "info");
+            document.getElementById('aula-modal').style.display = 'none';
+            return;
+        }
+        
+        mod.aulasCompletas.push(aulaIdx);
+        
+        let aulasProgresso = (mod.aulasCompletas.length / setor.aulas.length) * 50;
+        let exercicioProgresso = mod.exercicioFeito ? 25 : 0;
+        let simulacaoProgresso = mod.simulacaoFeita ? 25 : 0;
+        let progressoTotal = aulasProgresso + exercicioProgresso + simulacaoProgresso;
+        mod.progresso = progressoTotal;
+        
+        if (progressoTotal >= 100 && !mod.concluido) {
+            mod.concluido = true;
+            addPontos(100, `Módulo ${setor.nome} concluído`);
+            showToast(`🎉 PARABÉNS! Você completou o módulo de ${setor.nome}!`, 'success');
+            canvasConfetti({ particleCount: 300, spread: 120 });
+        }
+        
+        addPontos(15, 'Aula concluída');
+        saveUserData();
+        document.getElementById('aula-modal').style.display = 'none';
+        abrirModulo(slug);
+    }
+
+    window.iniciarExercicio = function(slug) {
+        const setor = todosModulos[slug];
+        if (userData.progresso[slug].exercicioFeito) {
+            showToast("Você já fez este exercício!", "info");
+            return;
+        }
+        
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById('quiz-screen').classList.add('active-screen');
+        
+        let html = `<div style="margin-bottom: 20px;"><button class="btn-voltar" onclick="voltarParaModulo('${slug}')"><i class="fas fa-arrow-left"></i> Voltar para módulo</button></div><div id="quizQuestions"></div><div id="quizResultado"></div>`;
+        document.getElementById('quizContent').innerHTML = html;
+        
+        let acertos = 0;
+        let respostasDadas = 0;
+        const totalPerguntas = setor.quiz.length;
+        
+        setor.quiz.forEach((q, idx) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'quiz-question';
+            questionDiv.innerHTML = `<h3><i class="fas fa-question-circle"></i> ${q.pergunta}</h3><div class="quiz-options" id="quiz-${idx}"></div><div id="feedback-${idx}" class="feedback"></div>`;
+            document.getElementById('quizQuestions').appendChild(questionDiv);
+            
+            const optionsDiv = document.getElementById(`quiz-${idx}`);
+            q.opcoes.forEach((opcao, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.innerHTML = `${String.fromCharCode(65+optIdx)}. ${opcao}`;
+                btn.onclick = () => {
+                    if (btn.classList.contains('disabled')) return;
+                    const isCorrect = (optIdx === q.correta);
+                    const feedbackDiv = document.getElementById(`feedback-${idx}`);
+                    document.querySelectorAll(`#quiz-${idx} .quiz-option`).forEach(b => b.classList.add('disabled'));
+                    
+                    if (isCorrect) {
+                        btn.classList.add('correct');
+                        feedbackDiv.innerHTML = `<i class="fas fa-check-circle"></i> ✅ Correto! ${q.explicacao}`;
+                        feedbackDiv.className = 'feedback correct';
+                        acertos++;
+                        addPontos(15, `Exercício - ${setor.nome}`);
+                        canvasConfetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
+                    } else {
+                        btn.classList.add('wrong');
+                        const correctLetter = String.fromCharCode(65 + q.correta);
+                        feedbackDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Errado! Resposta: ${correctLetter}. ${q.opcoes[q.correta]}<br><small>${q.explicacao}</small>`;
+                        feedbackDiv.className = 'feedback wrong';
+                    }
+                    respostasDadas++;
+                    if (respostasDadas === totalPerguntas) {
+                        document.getElementById('quizResultado').innerHTML = `<div class="card" style="text-align:center;"><h3>🏆 Resultado</h3><p style="font-size:1.5rem">${acertos}/${totalPerguntas} acertos</p><button class="btn-primary" onclick="finalizarExercicio('${slug}')">Finalizar</button></div>`;
+                    }
+                };
+                optionsDiv.appendChild(btn);
+            });
+        });
+    }
+
+    window.finalizarExercicio = function(slug) {
+        if (!userData.progresso[slug].exercicioFeito) {
+            userData.progresso[slug].exercicioFeito = true;
+            
+            let aulasProgresso = (userData.progresso[slug].aulasCompletas?.length || 0) / (todosModulos[slug].aulas.length || 1) * 50;
+            let exercicioProgresso = 25;
+            let simulacaoProgresso = userData.progresso[slug].simulacaoFeita ? 25 : 0;
+            let progressoTotal = aulasProgresso + exercicioProgresso + simulacaoProgresso;
+            userData.progresso[slug].progresso = progressoTotal;
+            
+            if (progressoTotal >= 100 && !userData.progresso[slug].concluido) {
+                userData.progresso[slug].concluido = true;
+                addPontos(100, `Módulo ${todosModulos[slug].nome} concluído`);
+                showToast(`🎉 PARABÉNS! Você completou o módulo de ${todosModulos[slug].nome}!`, 'success');
+                canvasConfetti({ particleCount: 300, spread: 120 });
+            }
+            saveUserData();
+        }
+        voltarParaModulo(slug);
+    }
+
+    window.iniciarSimulacao = function(slug) {
+        const setor = todosModulos[slug];
+        if (userData.progresso[slug].simulacaoFeita) {
+            showToast("Você já fez esta simulação!", "info");
+            return;
+        }
+        
+        const resposta = confirm(`🎭 SIMULAÇÃO - ${setor.nome}\n\nSituação: Um cliente chega reclamando que o produto está com preço diferente do anunciado.\n\nComo você resolve?\n\nClique em OK para a resposta correta (Oferecer o desconto e ajustar o sistema).`);
+        
+        if (resposta) {
+            userData.progresso[slug].simulacaoFeita = true;
+            
+            let aulasProgresso = (userData.progresso[slug].aulasCompletas?.length || 0) / (setor.aulas.length || 1) * 50;
+            let exercicioProgresso = userData.progresso[slug].exercicioFeito ? 25 : 0;
+            let simulacaoProgresso = 25;
+            let progressoTotal = aulasProgresso + exercicioProgresso + simulacaoProgresso;
+            userData.progresso[slug].progresso = progressoTotal;
+            
+            if (progressoTotal >= 100 && !userData.progresso[slug].concluido) {
+                userData.progresso[slug].concluido = true;
+                addPontos(100, `Módulo ${setor.nome} concluído`);
+                showToast(`🎉 PARABÉNS! Você completou o módulo de ${setor.nome}!`, 'success');
+                canvasConfetti({ particleCount: 300, spread: 120 });
+            }
+            
+            addPontos(40, `Simulação - ${setor.nome}`);
+            saveUserData();
+            showToast(`✅ Simulação concluída! +40 pontos`, 'success');
+            abrirModulo(slug);
+        }
+    }
+
+    function voltarParaModulo(slug) {
+        abrirModulo(slug);
+    }
+
+    window.voltarParaModulos = function() {
+        currentScreen = 'modulos';
+        atualizarUI();
+    }
+
+    window.baixarPDF = function(nomeCurso) {
+        if (typeof window.jspdf === 'undefined') { showToast('Erro ao gerar PDF', 'info'); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(22); doc.text("CERTIFICADO", 105, 40, { align: "center" });
+        doc.setFontSize(14); doc.text("confere a", 105, 70, { align: "center" });
+        doc.setFontSize(20); doc.text(userData.nome.toUpperCase(), 105, 95, { align: "center" });
+        doc.setFontSize(12); doc.text(`a conclusão do módulo "${nomeCurso}"`, 105, 120, { align: "center" });
+        doc.save(`Certificado_${userData.nome}_${nomeCurso}.pdf`);
+        showToast("📄 Certificado gerado!", "success");
+    };
+
+    // ==============================================================
+    // RENDERIZAÇÃO DA UI
+    // ==============================================================
+    function atualizarUI() {
+        if (!currentUser) return;
+        const navDiv = document.getElementById('navButtons');
+        const screensDiv = document.getElementById('screensContainer');
+        
+        let botoes = isGestor ? 
+            [{ id: 'dashboard', label: '📊 Gestor' }, { id: 'ranking', label: '🏆 Ranking' }] :
+            [{ id: 'dashboard', label: '🏠 Início' }, { id: 'modulos', label: '📚 Módulos' }, { id: 'certificados', label: '📜 Certificados' }, { id: 'conquistas', label: '🏅 Conquistas' }];
+        
+        navDiv.innerHTML = botoes.map(btn => `<button class="nav-btn ${currentScreen === btn.id ? 'active' : ''}" data-screen="${btn.id}">${btn.label}</button>`).join('');
+        
+        let telasHtml = isGestor ? `
+            <div id="dashboard-screen" class="screen ${currentScreen === 'dashboard' ? 'active-screen' : ''}">
+                <h2>Painel do Gestor</h2>
+                <div class="card-grid"><div class="card"><h3>Total Funcionários</h3><div class="stats-number">${listarTodosUsuarios().length}</div></div></div>
+                <div class="card"><h3>Cadastrar Funcionário</h3><input type="text" id="novoNome" placeholder="Nome" style="width:100%; padding:12px; margin-bottom:10px; border-radius:12px; border:1px solid var(--border-color);"><input type="text" id="novoCpf" placeholder="CPF" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border-color);"><button id="btnCadastrar" class="action-btn" style="margin-top:10px;">Cadastrar</button></div>
+            </div>
+            <div id="ranking-screen" class="screen ${currentScreen === 'ranking' ? 'active-screen' : ''}"><h2>🏆 Ranking Geral</h2><div id="rankingLista"></div></div>
+        ` : `
+            <div id="dashboard-screen" class="screen ${currentScreen === 'dashboard' ? 'active-screen' : ''}">
+                <h2>Olá, ${userData.nome}! 👋</h2>
+                <div class="card-grid">
+                    <div class="card"><h3><i class="fas fa-trophy"></i> Pontuação</h3><div class="stats-number">${userData.pontos}</div></div>
+                    <div class="card"><h3><i class="fas fa-chart-line"></i> Progresso Geral</h3><div class="stats-number">${Math.floor(calcularProgressoGeral())}%</div><div class="progress-bar"><div class="progress-fill" style="width:${calcularProgressoGeral()}%"></div></div></div>
+                    <div class="card"><h3><i class="fas fa-check-circle"></i> Módulos Concluídos</h3><div class="stats-number">${Object.values(userData.progresso).filter(m => m.concluido).length}/${Object.keys(todosModulos).length}</div></div>
+                </div>
+            </div>
+            <div id="modulos-screen" class="screen ${currentScreen === 'modulos' ? 'active-screen' : ''}">
+                <div class="scrollable"><div class="card-grid" id="modulosContainer"></div></div>
+            </div>
+            <div id="certificados-screen" class="screen ${currentScreen === 'certificados' ? 'active-screen' : ''}">
+                <h2>Meus Certificados</h2><div id="certificadosContainer"></div>
+            </div>
+            <div id="conquistas-screen" class="screen ${currentScreen === 'conquistas' ? 'active-screen' : ''}">
+                <h2>Minhas Conquistas</h2><div id="conquistasContainer"></div>
+            </div>
+            <div id="modulo-detalhe-screen" class="screen">
+                <button class="btn-voltar" onclick="voltarParaModulos()"><i class="fas fa-arrow-left"></i> Voltar para módulos</button>
+                <div id="moduloDetalheContent"></div>
+            </div>
+            <div id="quiz-screen" class="screen">
+                <div id="quizContent"></div>
+            </div>
+            <div id="aula-modal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="modalTitulo">Aula</h3><span class="modal-close" id="closeModal">&times;</span></div><div class="modal-body" id="modalBody"></div></div></div>
+        `;
+        
+        screensDiv.innerHTML = telasHtml;
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => { currentScreen = btn.dataset.screen; atualizarUI(); });
+        });
+        
+        if (!isGestor) {
+            if (currentScreen === 'modulos') renderModulos();
+            if (currentScreen === 'certificados') renderCertificados();
+            if (currentScreen === 'conquistas') renderConquistas();
+            document.getElementById('closeModal')?.addEventListener('click', () => { document.getElementById('aula-modal').style.display = 'none'; });
+        } else {
+            if (currentScreen === 'ranking') renderRanking();
+            document.getElementById('btnCadastrar')?.addEventListener('click', () => {
+                const nome = document.getElementById('novoNome').value;
+                const cpf = document.getElementById('novoCpf').value;
+                if (nome && cpf && !localStorage.getItem(`market_${cpf}`)) {
+                    let progresso = {};
+                    for (let slug in todosModulos) progresso[slug] = { progresso: 0, concluido: false, aulasCompletas: [], exercicioFeito: false, simulacaoFeita: false };
+                    localStorage.setItem(`market_${cpf}`, JSON.stringify({ nome, cpf, pontos: 0, progresso, conquistas: [] }));
+                    showToast("Funcionário cadastrado!", "success");
+                } else showToast("Erro ao cadastrar", "info");
+            });
+        }
+    }
+
+    function renderModulos() {
+        const container = document.getElementById('modulosContainer');
+        if (!container) return;
+        let html = '';
+        for (let slug in todosModulos) {
+            let mod = userData.progresso[slug] || { progresso: 0, concluido: false };
+            let setor = todosModulos[slug];
+            let statusText = mod.concluido ? '✅ Concluído' : `${Math.floor(mod.progresso)}%`;
+            html += `
+                <div class="card" onclick="abrirModulo('${slug}')">
+                    <h3>${setor.icone} ${setor.nome} <span style="font-size:0.7rem; color:${setor.cor};">${setor.carga}h</span></h3>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${mod.progresso}%; background: linear-gradient(90deg, ${setor.cor}, var(--primary));"></div></div>
+                    <p style="font-size:0.8rem;">${statusText}</p>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    function renderCertificados() {
+        const container = document.getElementById('certificadosContainer');
+        let concluidos = [];
+        for (let slug in userData.progresso) if (userData.progresso[slug].concluido) concluidos.push(todosModulos[slug]);
+        if (!concluidos.length) container.innerHTML = '<div class="card">🎓 Nenhum certificado disponível. Complete um módulo para gerar seu certificado!</div>';
+        else container.innerHTML = `<div class="card-grid">${concluidos.map(c => `<div class="card"><h3>${c.icone} ${c.nome}</h3><button class="btn-primary" onclick="baixarPDF('${c.nome}')" style="margin-top:12px;">📄 Baixar Certificado</button></div>`).join('')}</div>`;
+    }
+
+    function renderConquistas() {
+        const container = document.getElementById('conquistasContainer');
+        if (!userData.conquistas.length) container.innerHTML = '<div class="card">Complete atividades para desbloquear conquistas!</div>';
+        else container.innerHTML = `<div class="card-grid">${userData.conquistas.map(c => `<div class="card"><i class="fas ${c.icone}" style="font-size:2rem; color:var(--primary);"></i><h3 style="margin-top:12px;">${c.nome}</h3></div>`).join('')}</div>`;
+    }
+
+    function renderRanking() {
+        let usuarios = listarTodosUsuarios().sort((a,b)=>b.pontos - a.pontos);
+        document.getElementById('rankingLista').innerHTML = `<div class="scrollable">${usuarios.map((u,i)=>`<div class="ranking-item"><span><b>${i+1}º</b> ${u.nome}</span><span style="color:var(--primary); font-weight:bold;">${u.pontos} pts</span></div>`).join('')}</div>`;
+    }
+
+    // Login
+    document.getElementById('btnLogin').onclick = () => {
+        const nome = document.getElementById('loginNome').value.trim();
+        const cpf = document.getElementById('loginCpf').value.trim();
+        const senha = document.getElementById('loginSenha').value;
+        if (nome === 'gestor' && cpf === '00000000000' && senha === '123') {
+            isGestor = true; currentUser = 'gestor';
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            atualizarUI();
+        } else if (nome && cpf && senha) {
+            isGestor = false; currentUser = cpf;
+            loadUserData(nome, cpf);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            atualizarUI();
+        } else alert('Preencha todos os campos!');
+    };
+    
+    document.getElementById('logoutBtn')?.addEventListener('click', () => location.reload());
+    document.getElementById('themeToggle')?.addEventListener('click', () => document.body.classList.toggle('dark'));
+    
+    window.onclick = function(event) {
+        const modal = document.getElementById('aula-modal');
+        if (event.target === modal) modal.style.display = 'none';
+    }
+</script>
+</body>
+</html>
